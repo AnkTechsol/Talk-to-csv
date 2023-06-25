@@ -14,50 +14,33 @@ cursor = conn.cursor()
 st.set_page_config(page_title="👨‍💻 Talk with your CSV",layout = 'wide')
 load_dotenv()
 
-css = """
-<style>
-/* Hide the default file uploader button */
-div.fileUploader input[type="file"] {
-    opacity: 0;
-    position: absolute;
-    z-index: -1;
-}
-
-/* Style the custom file uploader button */
-div.fileUploader {
-    width: 200px;
-    height: 50px;
-    position: relative;
-    overflow: hidden;
-    background-color: transparent;
-    border: none;
-}
-
-div.fileUploader button {
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    background-color: transparent;
-    color: white;
-    font-size: 16px;
-    border: 2px solid white;
-    border-radius: 5px;
-}
-
-div.fileUploader button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    /* Add hover styles here */
-}
-
-div.fileUploader button:active {
-    background-color: rgba(255, 255, 255, 0.4);
-    /* Add active styles here */
-}
-</style>
-"""
 
 # Render the custom CSS styles
-st.markdown(css, unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+    /* Add custom CSS styles here */
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .full-width {
+        width: 100%;
+    }
+    
+    .stApp {
+        padding-top: 0 !important;
+    }
+    
+    .stTab {
+        margin-top: 0 !important;
+    }
+    
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 def csv_tool(filename : str):
@@ -194,95 +177,64 @@ def save_to_database():
 def fetch_historical_data():
     cursor.execute("SELECT query,answer FROM savedgraphs")
     return cursor.fetchall()
+def welcome():
+    st.title("👨‍💻 Talk with your CSV")
+    st.write("### An application which lets you analyze your csv")
+    st.write("#### How it works")
+    st.write("Upload your CSV file and input a query what analysis you want from csv")
+    st.write("Query can also be as to draw a bar chart or line chart or table it can also be QnA")
+    st.write("If the result want to be stored or added to the dashboard then a button is provided which is Add to canva which will add result to the dashboard")
+    st.write("A dashborad is available which is used to display the chart stored by the user")
+
+    if st.button("Take me to site"):
+        st.session_state['authentication_status'] = True
 
 
-tab1, tab2 = st.tabs(["👨‍💻 Talk with CSV", "🗃 Dashboard"])
+def login():
+    tab1, tab2 = st.tabs(["👨‍💻 Talk with CSV", "🗃 Dashboard"])
 
-#st.title("👨‍💻 Talk with your CSV")
-tab1.subheader("👨‍💻 Talk with your CSV")
-#st.write("Please upload your CSV file below.")
-tab1.write("Please upload your CSV file below")
-data = tab1.file_uploader("Upload a CSV" , type="csv",accept_multiple_files=False, key="fileUploader")
+    #st.title("👨‍💻 Talk with your CSV")
+    tab1.subheader("👨‍💻 Talk with your CSV")
+    #st.write("Please upload your CSV file below.")
+    tab1.write("Please upload your CSV file below")
+    data = tab1.file_uploader("Upload a CSV" , type="csv",accept_multiple_files=False, key="fileUploader")
 
-query = tab1.text_area("Send a Message")
+    query = tab1.text_area("Send a Message")
 
-if tab1.button("Submit Query"):
-    # Create an agent from the CSV file.
-    agent = csv_tool(data)
+    if tab1.button("Submit Query"):
+        # Create an agent from the CSV file.
+        agent = csv_tool(data)
 
-    # Query the agent.
-    response = ask_agent(agent=agent, query=query)
-
-
-    # Decode the response.
-    decoded_response = decode_response(response)
-    #decoded_response = {"bar": {"columns": ["Price"], "data": [20.04, 16.94, 15.77]}}
-
-    # Write the response to the Streamlit app.
-    write_answer(decoded_response)
-    st.session_state['query'] = query
-    st.session_state['response'] = str(decoded_response)
-    if st.button("Exit",args=(st.session_state.query,st.session_state.response)):
-            print("Removed element")
-            print("Removed element finally removed")
+        # Query the agent.
+        response = ask_agent(agent=agent, query=query)
 
 
-if tab1.button("Add this to Canva"):
-    save_to_database()
-with tab2:
-    tab2.subheader("All the graphs")
-    showallgraph()
+        # Decode the response.
+        decoded_response = decode_response(response)
+        #decoded_response = {"bar": {"columns": ["Price"], "data": [20.04, 16.94, 15.77]}}
 
-# if st.button("Show me All the graphs"):
-#     st.empty()
-#     showallgraph()
-    # col1 ,col2,col3 = st.columns(3)
-    # with col1:
-    #     st.markdown("### Bar Chart")
-    # with col2:
-    #     st.markdown("### Answer")
-    # with col3:
-    #     st.markdown("### Line graph")
-    # data = fetch_historical_data()
-    # if data:
-        
-    #     for row in data:
-    #         new_data = row[1]
-    #         new_data = new_data.replace("'",'"')
-    #         data_1 = json.loads(new_data)
-    #         #write_answer(data_1)
-    #         with col1:
-    #             if 'bar' in data_1:
-    #                 st.write(row[0])
-    #                 write_answer(data_1)
-    #     for row in data:
-    #         new_data = row[1]
-    #         new_data = new_data.replace("'",'"')
-    #         data_1 = json.loads(new_data)
-    #         #write_answer(data_1)
-    #         with col2:
-    #             if 'answer' in data_1:
-    #                 st.write(row[0])
-    #                 write_answer(data_1)
-    #     for row in data:
-    #         new_data = row[1]
-    #         new_data = new_data.replace("'",'"')
-    #         print(new_data)
-    #         data_1 = json.loads(new_data)
-    #         #write_answer(data_1)
-    #         if 'line' in data_1:
-    #             with col3:
-    #                 st.write(row[0])
-    #                 write_answer(data_1)
-    #     st.markdown("### Tables")
-    #     for row in data:
-    #         new_data = row[1]
-    #         new_data = new_data.replace("'",'"')
-    #         data_1 = json.loads(new_data)
-    #         #write_answer(data_1)
-    #         if 'table' in data_1:
-    #                 st.write(row[0])
-    #                 write_answer(data_1)
-            
+        # Write the response to the Streamlit app.
+        write_answer(decoded_response)
+        st.session_state['query'] = query
+        st.session_state['response'] = str(decoded_response)
+        if st.button("Exit",args=(st.session_state.query,st.session_state.response)):
+                print("Removed element")
+                print("Removed element finally removed")
 
 
+    if tab1.button("Add this to Canva"):
+        save_to_database()
+    with tab2:
+        tab2.subheader("All the graphs")
+        showallgraph()
+
+
+def main():
+    if 'authentication_status' not in st.session_state:
+        st.session_state['authentication_status'] = False
+    if st.session_state['authentication_status']:
+        login()
+    else:
+        welcome()
+if __name__ == "__main__":
+    main()
